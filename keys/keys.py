@@ -13,11 +13,13 @@ class Columns(Enum):
 
 class AnalysisFunctions:
     class MovingAverage:
-        value_type = "High"
+        value_type = Columns.high.value
         sample_size = 6
+        open_price = False
+        close_price = True
 
         def set_value_type(self, _input: str):
-            cols = ["Open", "High", "Low", "Close"]
+            cols = ["Open", "High", "Low", "Close", "Adj Close"]
             if _input in cols:
                 self.value_type = _input
             else:
@@ -25,6 +27,18 @@ class AnalysisFunctions:
 
         def set_sample_size(self, _input: int):
             self.sample_size = _input
+        
+        def set_openprice_enabled(self):
+            self.open_price = True
+        
+        def set_closeprice_enabled(self):
+            self.close_price = True
+        
+        def set_openprice_disabled(self):
+            self.open_price = False
+        
+        def set_closeprice_disabled(self):
+            self.close_price = False
 
     class Fake:
         pass

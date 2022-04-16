@@ -4,17 +4,18 @@ import os
 from factory import StockAnalysis, convert_fig_to_json
 from keys.keys import Columns, AnalysisFunctions, PlotTypes
 
-os.system("cls")
 app = Flask(__name__, template_folder="templates/")
 
 
 @app.route("/")
 def index():
+    t = "AAPL"
     test = StockAnalysis()
     analysis = AnalysisFunctions.MovingAverage()
-    x = test.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker="AAPL")
+    analysis.set_sample_size(24*6)
+    x = test.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=t)
     graph_json = convert_fig_to_json(x)
-    return render_template(template_name_or_list="plot.html", graphJSON=graph_json)
+    return render_template(template_name_or_list="plot.html", graph1=graph_json, title=t)
 
 
 if __name__ == "__main__":
