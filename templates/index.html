@@ -1,0 +1,12 @@
+<!doctype html>
+
+<html>
+  <body style="background-color:#282828; color:#eeeeee;">
+    <h1 style="text-align:center; font-size: 250%;">{{title}}</h1>
+    <label for="user_ticker">Ticker</label>
+    <form action = "http://localhost:5000/test" method = "post">
+      <input type="text" name="user_ticker" id="user_ticker" />
+      <input type="submit" name="submit_ticker" value="Submit Ticker">
+    </form>
+  </body>
+</html>

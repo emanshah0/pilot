@@ -1,51 +1,17 @@
 <!doctype html>
+
 <html>
-
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    /* Create two equal columns that floats next to each other */
-    .column {
-      float: left;
-      width: 50%;
-      padding: 1px;
-    }
-
-    /* Clear floats after the columns */
-    .row:after {
-      content: "";
-      display: table;
-      clear: both;
-    }
-  </style>
-</head>
-
-<body style="background-color:#282828; color:#eeeeee;">
-  <h1 style="text-align:center; font-size: 250%;">{{title}}</h1>
-  <div class="row">
-    <div class="column">
-      <h3>Long Term</h2>
-      <p id='chart' class='chart'></p>
-      <h3>Short Term</h2>
-      <p id='chart2' class='chart'></p>
+  <body style="background-color:#282828; color:#eeeeee;">
+    <div class="row">
+        <h2>{{id}} Term</h2>
+        <p id={{id}} class='chart'></p>
     </div>
-    </div>
-  </div>
+  </body>
 
-</body>
-
-
-
-<script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
-<script type='text/javascript'>
-  var g1 = {{ g1 | safe}};
-  var g2 = {{ g2 | safe}};
-  Plotly.plot('chart', g1, {});
-  Plotly.plot('chart2', g2, {});
-</script>
-
+  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+  <script type='text/javascript'>
+    var _graph = {{ graph | safe}};
+    var _id = {{id | safe}};
+    Plotly.plot(_id, _graph, {});
+  </script>
 </html>

@@ -22,42 +22,54 @@ class StockAnalysis:
         valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
         """
         self.data = {}
-        settings = {
-            'period': "2y",
-            'interval': "1h",
-            'group_by': "ticker",
-            'threads': True
-        }
-        self.download(**settings)
 
-    def download(self, **kwargs):
-        tickers_str = " ".join(ticker_list)
-        if 'tickers' in kwargs:
-            cache = yf.download(**kwargs)
-        else:
-            cache = yf.download(tickers=tickers_str, **kwargs)
-        print(len(cache))
-        if len(ticker_list) == 1:
-            cache.sort_index()
-            cache.reset_index(inplace=True)
-            if "index" in cache:
-                cache = cache.rename(columns={"index": "Date"})
-            if "Datetime" in cache:
-                cache = cache.rename(columns={"Datetime": "Date"})
-            self.data = {ticker_list[0]: cache}
-        else:
-            for key in cache.keys():
-                cache[key].sort_index()
-                cache[key].reset_index(inplace=True)
+    def download(self, kwargs):
+        try:
+            if 'tickers' in kwargs:
+                cache = yf.download(**kwargs)
+                if len(cache) < 1:
+                    return 0
+                cache.sort_index()
+                cache.reset_index(inplace=True)
                 if "index" in cache:
-                    cache[key] = cache[key].rename(columns={"index": "Date"})
-            self.data = cache
+                    cache = cache.rename(columns={"index": "Date"})
+                elif "Datetime" in cache:
+                    cache = cache.rename(columns={"Datetime": "Date"})
+                cache = {kwargs['tickers']: cache}
+                self.data = cache
+            else:
+                tickers_str = " ".join(ticker_list)
+                cache = yf.download(tickers=tickers_str, **kwargs)
+                if len(cache) < 1:
+                    return 0
+                if len(ticker_list) == 1:
+                    cache.sort_index()
+                    cache.reset_index(inplace=True)
+                    if "index" in cache:
+                        cache = cache.rename(columns={"index": "Date"})
+                    elif "Datetime" in cache:
+                        cache = cache.rename(columns={"Datetime": "Date"})
+                    self.data = {ticker_list[0]: cache}
+                else:
+                    for key in cache.keys():
+                        cache[key].sort_index()
+                        cache[key].reset_index(inplace=True)
+                        if "index" in cache:
+                            cache[key] = cache[key].rename(columns={"index": "Date"})
+                        elif "Datetime" in cache:
+                            cache = cache.rename(columns={"Datetime": "Date"})
+                    self.data = cache
+            return 1
+        except Exception as err:
+            print(f"{err}\nERROR DOWNLOADING DATA")
+            return 0
 
     def get_graph(self, analysis, plot_type: PlotTypes, ticker: str):
         graph: go.Figure = go.Figure()
         opacity = 0.6
 
         if isinstance(analysis, AnalysisFunctions.MovingAverage):
+            print(self.data.keys())
             time, ma = calculate_moving_average(data=self.data[ticker], value_type=analysis.value_type,
                                                 sample_size=analysis.sample_size)
             self.data[ticker][Columns.ma.value] = ma
