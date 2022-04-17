@@ -6,8 +6,10 @@ import plotly.graph_objects as go
 from plotly.utils import PlotlyJSONEncoder
 from plotly.subplots import make_subplots
 from scipy.signal import find_peaks
-import math
+
 from datetime import datetime
+import pyautogui
+import math
 
 from configs import ticker_list
 from keys.keys import Columns, AnalysisFunctions, PlotTypes
@@ -30,7 +32,11 @@ class StockAnalysis:
 
     def download(self, **kwargs):
         tickers_str = " ".join(ticker_list)
-        cache = yf.download(tickers=tickers_str, **kwargs)
+        if 'tickers' in kwargs:
+            cache = yf.download(**kwargs)
+        else:
+            cache = yf.download(tickers=tickers_str, **kwargs)
+        print(len(cache))
         if len(ticker_list) == 1:
             cache.sort_index()
             cache.reset_index(inplace=True)
@@ -49,7 +55,7 @@ class StockAnalysis:
 
     def get_graph(self, analysis, plot_type: PlotTypes, ticker: str):
         graph: go.Figure = go.Figure()
-        opacity = 0.5
+        opacity = 0.6
 
         if isinstance(analysis, AnalysisFunctions.MovingAverage):
             time, ma = calculate_moving_average(data=self.data[ticker], value_type=analysis.value_type,
@@ -66,7 +72,7 @@ class StockAnalysis:
                            'name': f":{ticker}:{Columns.Open.value}",
                            'opacity': opacity,
                            'marker': dict(
-                                color='#ffcc66',)}))
+                                color='#ff8000',)}))
             if analysis.close_price:
                 traces.append(
                     get_scatter_graph(
@@ -75,19 +81,24 @@ class StockAnalysis:
                            'name': f":{ticker}:{Columns.adj_close.value}",
                            'opacity': opacity,
                            'marker': dict(
-                                color='#ffcc66',)}))
+                                color='#ff8000',)}))
             if analysis.sell_indicators:
                 traces.append(self.get_peaks_graph(ticker))
             if analysis.buy_indicators:
                 traces.append(self.get_peaks_graph(ticker, invert=True))
             graph = combine_graphs(traces, plot_type)
 
+        # GRAPH LAYOUT
+        width, height= pyautogui.size()
         rgb = 200
+        margins = 20
+        op = 0.8
         graph.update_layout(
-            width=960,
-            height=500,
-            paper_bgcolor=f"rgba({rgb},{rgb},{rgb},0.9)",
-            plot_bgcolor=f"rgba({rgb},{rgb},{rgb}, 0.9)"
+            width=width-20,
+            height=height//2,
+            margin=dict(l=margins, r=margins, t=margins, b=margins),
+            paper_bgcolor=f"rgba({rgb},{rgb},{rgb},{op})",
+            plot_bgcolor=f"rgba({rgb},{rgb},{rgb}, {op})"
         )
         return graph
 
@@ -114,7 +125,7 @@ class StockAnalysis:
                             ),
                             name='SELL')
         else:
-            indices = find_peaks(-self.data[ticker][Columns.ma.value], prominence=3)[0]
+            indices = find_peaks(-self.data[ticker][Columns.ma.value], prominence=1)[0]
             peaks = [self.data[ticker][Columns.ma.value][j] for j in indices]
             indices_times = [self.data[ticker][Columns.date.value][j] for j in indices]
             return go.Scatter(
