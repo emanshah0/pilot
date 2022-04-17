@@ -9,6 +9,7 @@ class Columns(Enum):
     adj_close = "Adj Close"
     volume = "Volume"
     date = "Date"
+    ma = "MA"
 
 
 class AnalysisFunctions:
@@ -17,6 +18,8 @@ class AnalysisFunctions:
         sample_size = 6
         open_price = False
         close_price = True
+        sell_indicators = True
+        buy_indicators = True
 
         def set_value_type(self, _input: str):
             cols = ["Open", "High", "Low", "Close", "Adj Close"]
@@ -27,25 +30,11 @@ class AnalysisFunctions:
 
         def set_sample_size(self, _input: int):
             self.sample_size = _input
-        
-        def set_openprice_enabled(self):
-            self.open_price = True
-        
-        def set_closeprice_enabled(self):
-            self.close_price = True
-        
-        def set_openprice_disabled(self):
-            self.open_price = False
-        
-        def set_closeprice_disabled(self):
-            self.close_price = False
 
     class Fake:
         pass
 
 
 class PlotTypes(Enum):
-    SCATTER = "SCATTER"
-    SCATTER_SUBPLOTS = "SCATTER SUB-PLOTS"
+    SUBPLOTS = "SUB-PLOTS"
     TRACE = "TRACE"
-    TRACE_SUBPLOTS = "TRACE SUB-PLOTS"

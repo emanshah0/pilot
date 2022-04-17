@@ -1,4 +1,7 @@
 {
     "beta": ["SPY", "AAPL", "NIO", "GOOGL", "DIS"],
-    "tickers": ["AAPL"]
+    "tickers": ["AAPL"],
+    "output html": "/home/pi/emanshah0.github.io/",
+    "output html": "C:\\users\\emans\\desktop\\dev\\emanshah0.github.io\\",
+    "local html": "C:\\users\\emans\\desktop\\dev\\pilot\\templates\\local.html"
 }
