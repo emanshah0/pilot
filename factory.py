@@ -101,8 +101,8 @@ class StockAnalysis:
             graph = combine_graphs(traces, plot_type)
 
         # GRAPH LAYOUT
-        width, height= pyautogui.size()
-        rgb = 200
+        width, height = pyautogui.size()
+        rgb = 220
         margins = 20
         op = 0.8
         graph.update_layout(
@@ -112,6 +112,37 @@ class StockAnalysis:
             paper_bgcolor=f"rgba({rgb},{rgb},{rgb},{op})",
             plot_bgcolor=f"rgba({rgb},{rgb},{rgb}, {op})"
         )
+
+        # Range Slider is cool but less useful?
+        # graph.update_layout(
+        #     xaxis=dict(
+        #         rangeselector=dict(
+        #             buttons=list([
+        #                 dict(count=1,
+        #                      label="1m",
+        #                      step="month",
+        #                      stepmode="backward"),
+        #                 dict(count=6,
+        #                      label="6m",
+        #                      step="month",
+        #                      stepmode="backward"),
+        #                 dict(count=1,
+        #                      label="YTD",
+        #                      step="year",
+        #                      stepmode="todate"),
+        #                 dict(count=1,
+        #                      label="1y",
+        #                      step="year",
+        #                      stepmode="backward"),
+        #                 dict(step="all")
+        #             ])
+        #         ),
+        #         rangeslider=dict(
+        #             visible=True
+        #         ),
+        #         type="date"
+        #     )
+        # )
         return graph
 
     def populate_avgs(self):

@@ -60,6 +60,7 @@ def test():
                 temp_graph = data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
                 g2 = convert_fig_to_json(temp_graph)
 
+                index_template = render_template(template_name_or_list="index.html", graph=g1, title=ticker)
                 graph_1 = render_template(template_name_or_list="plot.html", graph=g1, id="Short")
                 graph_2 = render_template(template_name_or_list="plot.html", graph=g2, id="Long")
                 return index_template + graph_1 + graph_2
@@ -68,18 +69,6 @@ def test():
         elif request.method == 'GET':
             return index_template
     return index_template
-
-
-@app.route("/short")
-def short():
-    t = "AAPL"
-    data_dump = StockAnalysis()
-    data_dump.download(period='1mo', interval='30m')
-    analysis = AnalysisFunctions.MovingAverage()
-    analysis.set_sample_size(3)
-    temp_graph = data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=t)
-    graph_json = convert_fig_to_json(temp_graph)
-    return render_template(template_name_or_list="plot.html", graph1=graph_json, title=t)
 
 
 def output_html():
