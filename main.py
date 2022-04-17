@@ -26,6 +26,7 @@ def test():
             if request.form['user_ticker'] != '':
                 ticker = request.form.get("user_ticker").upper()
                 data_dump = StockAnalysis()
+
                 current_time = datetime.now()
                 start_time = (current_time - relativedelta(months=12)).strftime("%Y-%m-%d")
                 current_time = current_time.strftime("%Y-%m-%d")
@@ -36,7 +37,6 @@ def test():
                     'threads': True,
                     'interval': '1h'
                 }
-
                 if not data_dump.download(settings):
                     return index_template + "<br> NO DATA FOR PROVIDED TICKER: " + ticker
 
@@ -44,13 +44,14 @@ def test():
                 analysis.set_sample_size(24 * 1)
                 temp_graph = data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
                 g1 = convert_fig_to_json(temp_graph)
+
                 settings = {
+                    'tickers': ticker,
                     'period': "2y",
                     'interval': "1h",
                     'group_by': "ticker",
                     'threads': True,
                 }
-
                 if not data_dump.download(settings):
                     return index_template + "<br> NO DATA FOR PROVIDED TICKER: " + ticker
 
