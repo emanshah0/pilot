@@ -41,9 +41,10 @@ def test():
                     return index_template + "<br> NO DATA FOR PROVIDED TICKER: " + ticker
 
                 analysis = AnalysisFunctions.MovingAverage()
-                analysis.set_sample_size(24 * 1)
+                analysis.set_sample_size(6 * 6)
                 temp_graph = data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
                 g1 = convert_fig_to_json(temp_graph)
+                graph_1 = render_template(template_name_or_list="plot.html", graph=g1, id="Short", slider_id="short")
 
                 settings = {
                     'tickers': ticker,
@@ -53,23 +54,36 @@ def test():
                     'threads': True,
                 }
                 if not data_dump.download(settings):
-                    return index_template + "<br> NO DATA FOR PROVIDED TICKER: " + ticker
+                    return index_template + graph_1 + "<br> NO DATA FOR LONG TERM CONFIGURATION " + ticker
 
                 analysis = AnalysisFunctions.MovingAverage()
-                analysis.set_sample_size(3 * 33)
+                analysis.set_sample_size(100)
                 temp_graph = data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
                 g2 = convert_fig_to_json(temp_graph)
 
-                index_template = render_template(template_name_or_list="index.html", graph=g1, title=ticker)
-                graph_1 = render_template(template_name_or_list="plot.html", graph=g1, id="Short")
-                graph_2 = render_template(template_name_or_list="plot.html", graph=g2, id="Long")
-                return index_template + graph_1 + graph_2
+                index_template = render_template(template_name_or_list="index.html", title=ticker)
+                graph_2 = render_template(template_name_or_list="plot.html", graph=g2, id="Long", slider_id="long")
+                full_html = index_template + graph_1 + graph_2
+                with app.app_context():
+                    save_html(full_html)
+                return full_html
             else:
                 return index_template + "<br> ENTER TICKER ABOVE"
         elif request.method == 'GET':
             return index_template
     return index_template
 
+
+@app.route('/background_process_test', methods=['GET', 'POST'])
+def background_process_test():
+    this_id = None
+    if request.method == "POST":
+        if request.form:
+            new_sample_size = request.form['ss']
+            this_id = request.form['id']
+            return this_id
+        else:
+            print("no data")
 
 def output_html():
     from flask import render_template

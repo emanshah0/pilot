@@ -5,13 +5,37 @@
     <div class="row">
         <h2>{{id}} Term</h2>
         <p id={{id}} class='chart'></p>
+        <form method = 'POST'>
+            <div class="rangeslider">
+                <input type="range" min="1" max="100" value="50" class="slider" id="{{slider_id}}">
+            </div>
+        </form>
     </div>
+    <div id="sliderAmount"></div>
   </body>
+</html>
 
-  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
-  <script type='text/javascript'>
+<script type='text/javascript'>
     var _graph = {{ graph | safe}};
     var _id = {{id | safe}};
     Plotly.plot(_id, _graph, {});
-  </script>
-</html>
+</script>
+
+
+<script type='text/javascript'>
+    var sliderDiv = document.getElementById("sliderAmount");
+
+    ({{slider_id}}).onchange = function() {
+        sliderDiv.innerHTML = this.value;
+        console.log(({{slider_id}}).id)
+        $.ajax({
+                url: '/background_process_test',
+                type: "POST",
+                data: {'ss': this.value, 'id': ({{slider_id}}).id},
+                success: function(res) {
+                    console.log(res);
+                }
+        });
+    }
+</script>
+

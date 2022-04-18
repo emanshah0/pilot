@@ -84,7 +84,7 @@ class StockAnalysis:
                            'name': f":{ticker}:{Columns.Open.value}",
                            'opacity': opacity,
                            'marker': dict(
-                                color='#ff8000',)}))
+                               color='#ff8000', )}))
             if analysis.close_price:
                 traces.append(
                     get_scatter_graph(
@@ -93,7 +93,7 @@ class StockAnalysis:
                            'name': f":{ticker}:{Columns.adj_close.value}",
                            'opacity': opacity,
                            'marker': dict(
-                                color='#ff8000',)}))
+                               color='#ff8000', )}))
             if analysis.sell_indicators:
                 traces.append(self.get_peaks_graph(ticker))
             if analysis.buy_indicators:
@@ -103,46 +103,15 @@ class StockAnalysis:
         # GRAPH LAYOUT
         width, height = pyautogui.size()
         rgb = 220
-        margins = 20
+        margins = 30
         op = 0.8
         graph.update_layout(
-            width=width-20,
-            height=height//2,
+            width=int(width * 0.98),
+            height=int(height * 0.6),
             margin=dict(l=margins, r=margins, t=margins, b=margins),
             paper_bgcolor=f"rgba({rgb},{rgb},{rgb},{op})",
             plot_bgcolor=f"rgba({rgb},{rgb},{rgb}, {op})"
         )
-
-        # Range Slider is cool but less useful?
-        # graph.update_layout(
-        #     xaxis=dict(
-        #         rangeselector=dict(
-        #             buttons=list([
-        #                 dict(count=1,
-        #                      label="1m",
-        #                      step="month",
-        #                      stepmode="backward"),
-        #                 dict(count=6,
-        #                      label="6m",
-        #                      step="month",
-        #                      stepmode="backward"),
-        #                 dict(count=1,
-        #                      label="YTD",
-        #                      step="year",
-        #                      stepmode="todate"),
-        #                 dict(count=1,
-        #                      label="1y",
-        #                      step="year",
-        #                      stepmode="backward"),
-        #                 dict(step="all")
-        #             ])
-        #         ),
-        #         rangeslider=dict(
-        #             visible=True
-        #         ),
-        #         type="date"
-        #     )
-        # )
         return graph
 
     def populate_avgs(self):
@@ -158,15 +127,15 @@ class StockAnalysis:
             peaks = [self.data[ticker][Columns.ma.value][j] for j in indices]
             indices_times = [self.data[ticker][Columns.date.value][j] for j in indices]
             return go.Scatter(
-                            x=indices_times,
-                            y=peaks,
-                            mode='markers',
-                            marker=dict(
-                                size=8,
-                                color='red',
-                                symbol='arrow-bar-down'
-                            ),
-                            name='SELL')
+                x=indices_times,
+                y=peaks,
+                mode='markers',
+                marker=dict(
+                    size=8,
+                    color='red',
+                    symbol='arrow-bar-down'
+                ),
+                name='SELL')
         else:
             indices = find_peaks(-self.data[ticker][Columns.ma.value], prominence=1)[0]
             peaks = [self.data[ticker][Columns.ma.value][j] for j in indices]
@@ -210,7 +179,13 @@ def calculate_moving_average(data: pd.DataFrame, value_type: str, sample_size: i
     """Returns Sorted Lists: Datetimes, Moving Average"""
     stack, ma = [], []
     for index, row in data.iterrows():
-        stack.append(row[value_type])
+        temp = row[value_type]
+        if type(temp) == type(pd.NaT):
+            print(temp)
+            stack.append(sum(stack)/len(stack))
+        else:
+            stack.append(temp)
+
         if len(stack) > sample_size:
             stack.pop(0)
         ma.append(sum(stack) / sample_size)

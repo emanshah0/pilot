@@ -1,12 +1,25 @@
 <!doctype html>
 
+<head>
+  <!--Links go here-->
+  <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/slider.css') }}">
+
+  <!--Scripts go here-->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+</head>
+
+
 <html>
   <body style="background-color:#282828; color:#eeeeee; font-size:150%;">
     <h1 style="text-align:center;">{{title}}</h1>
-    <form action = "http://localhost:5000/test" method = "post">
+    <form action = "{{url_for('test')}}" method = "post">
       <label for="user_ticker">Ticker</label>
       <input type="text" name="user_ticker" id="user_ticker"/>
       <input type="submit" name="submit_ticker" value="Submit Ticker">
     </form>
   </body>
 </html>
+
+
+
