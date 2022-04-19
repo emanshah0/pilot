@@ -85,6 +85,7 @@ def background_process_test():
         else:
             print("no data")
 
+
 def output_html():
     from flask import render_template
     t = "AAPL"

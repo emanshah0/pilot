@@ -6,10 +6,7 @@ import plotly.graph_objects as go
 from plotly.utils import PlotlyJSONEncoder
 from plotly.subplots import make_subplots
 from scipy.signal import find_peaks
-
-from datetime import datetime
 import pyautogui
-import math
 
 from configs import ticker_list
 from keys.keys import Columns, AnalysisFunctions, PlotTypes
@@ -182,7 +179,7 @@ def calculate_moving_average(data: pd.DataFrame, value_type: str, sample_size: i
         temp = row[value_type]
         if type(temp) == type(pd.NaT):
             print(temp)
-            stack.append(sum(stack)/len(stack))
+            stack.append(sum(stack) / len(stack))
         else:
             stack.append(temp)
 
