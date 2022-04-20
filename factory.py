@@ -10,14 +10,16 @@ import pyautogui
 
 from configs import ticker_list
 from keys.keys import Columns, AnalysisFunctions, PlotTypes
+from data.tools import Buffer
 
 
 class StockAnalysis:
-    def __init__(self):
+    def __init__(self, buffer: Buffer = None):
         """
         valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
         valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
         """
+        self.buffer = buffer
         self.data = {}
 
     def download(self, kwargs):
@@ -66,7 +68,6 @@ class StockAnalysis:
         opacity = 0.6
 
         if isinstance(analysis, AnalysisFunctions.MovingAverage):
-            print(self.data.keys())
             time, ma = calculate_moving_average(data=self.data[ticker], value_type=analysis.value_type,
                                                 sample_size=analysis.sample_size)
             self.data[ticker][Columns.ma.value] = ma
@@ -96,7 +97,9 @@ class StockAnalysis:
             if analysis.buy_indicators:
                 traces.append(self.get_peaks_graph(ticker, invert=True))
             graph = combine_graphs(traces, plot_type)
-
+            self.buffer.cache(ts=time, ma=ma, sample_size=str(analysis.sample_size))
+        self.buffer.save()
+        self.buffer.clear_buffer()
         # GRAPH LAYOUT
         width, height = pyautogui.size()
         rgb = 220
@@ -123,6 +126,7 @@ class StockAnalysis:
             indices = find_peaks(self.data[ticker][Columns.ma.value], prominence=1)[0]
             peaks = [self.data[ticker][Columns.ma.value][j] for j in indices]
             indices_times = [self.data[ticker][Columns.date.value][j] for j in indices]
+            self.buffer.cache(sell_ts=indices_times, sell_pk=peaks)
             return go.Scatter(
                 x=indices_times,
                 y=peaks,
@@ -137,6 +141,7 @@ class StockAnalysis:
             indices = find_peaks(-self.data[ticker][Columns.ma.value], prominence=1)[0]
             peaks = [self.data[ticker][Columns.ma.value][j] for j in indices]
             indices_times = [self.data[ticker][Columns.date.value][j] for j in indices]
+            self.buffer.cache(buy_ts=indices_times, buy_pk=peaks)
             return go.Scatter(
                 x=indices_times,
                 y=peaks,

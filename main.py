@@ -1,15 +1,21 @@
+import json
+
+import plotly.utils
 from flask import Flask, render_template, request
 from flask_apscheduler import APScheduler
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import os
+import plotly.graph_objects as go
 
-from factory import StockAnalysis, convert_fig_to_json
+from factory import StockAnalysis, convert_fig_to_json, get_scatter_graph, combine_graphs
 from keys.keys import Columns, AnalysisFunctions, PlotTypes
 from configs import save_html, ticker_list
+from data.tools import Buffer
 
 app = Flask(__name__, template_folder="templates/")
 scheduler = APScheduler()
+buffer = Buffer()
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -25,7 +31,7 @@ def test():
         if request.form['submit_ticker'] == 'Submit Ticker':
             if request.form['user_ticker'] != '':
                 ticker = request.form.get("user_ticker").upper()
-                data_dump = StockAnalysis()
+                data_dump = StockAnalysis(buffer)
 
                 current_time = datetime.now()
                 start_time = (current_time - relativedelta(months=12)).strftime("%Y-%m-%d")
@@ -41,11 +47,17 @@ def test():
                     return index_template + "<br> NO DATA FOR PROVIDED TICKER: " + ticker
 
                 analysis = AnalysisFunctions.MovingAverage()
-                analysis.set_sample_size(6 * 6)
+                for i in range(15, 100, 5):
+                    analysis.set_sample_size(i)
+                    buffer.cache(section="short")
+                    data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
+                buffer.cache(section="short")
+                analysis.set_sample_size(25)
                 temp_graph = data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
                 g1 = convert_fig_to_json(temp_graph)
                 graph_1 = render_template(template_name_or_list="plot.html", graph=g1, id="Short", slider_id="short")
 
+                data_dump = StockAnalysis(buffer)
                 settings = {
                     'tickers': ticker,
                     'period': "2y",
@@ -57,6 +69,11 @@ def test():
                     return index_template + graph_1 + "<br> NO DATA FOR LONG TERM CONFIGURATION " + ticker
 
                 analysis = AnalysisFunctions.MovingAverage()
+                for i in range(15, 95, 5):
+                    analysis.set_sample_size(i)
+                    buffer.cache(section="long")
+                    data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
+                buffer.cache(section="long")
                 analysis.set_sample_size(100)
                 temp_graph = data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
                 g2 = convert_fig_to_json(temp_graph)
@@ -76,12 +93,43 @@ def test():
 
 @app.route('/background_process_test', methods=['GET', 'POST'])
 def background_process_test():
-    this_id = None
     if request.method == "POST":
         if request.form:
             new_sample_size = request.form['ss']
             this_id = request.form['id']
-            return this_id
+
+            buffer.load(section=this_id, sample_size=new_sample_size)
+            if buffer.graph_exists():
+                ts = buffer.get_time_series()
+                ma = buffer.get_ma()
+                bts = buffer.get_buy_series()
+                bpk = buffer.get_buy_peaks()
+                sts = buffer.get_sell_series()
+                spk = buffer.get_sell_peaks()
+
+                traces = [get_scatter_graph(**{'x': ts,
+                                               'y': ma,
+                                               'name': f"MA:{new_sample_size}"}),
+                          get_scatter_graph(**{'x': sts,
+                                               'y': spk,
+                                               'name': "SELL",
+                                               'marker': dict(
+                                                   size=8,
+                                                   color='red',
+                                                   symbol='arrow-bar-down'
+                                               ), }),
+                          get_scatter_graph(**{'x': bts,
+                                               'y': bpk,
+                                               'name': "BUY",
+                                               'marker': dict(
+                                                   size=8,
+                                                   color='green',
+                                                   symbol='arrow-bar-up'
+                                               ), })
+                          ]
+                graph = combine_graphs(traces, PlotTypes.TRACE)
+                graph = json.dumps(graph, cls=plotly.utils.PlotlyJSONEncoder)
+                return graph
         else:
             print("no data")
 

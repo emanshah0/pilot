@@ -7,7 +7,7 @@
         <p id={{id}} class='chart'></p>
         <form method = 'POST'>
             <div class="rangeslider">
-                <input type="range" min="0" max="96" step="6" value="40" class="slider" id="{{slider_id}}">
+                <input type="range" min="15" max="100" step="5" value="30" class="slider" id="{{slider_id}}">
             </div>
         </form>
     </div>
@@ -33,7 +33,8 @@
                 type: "POST",
                 data: {'ss': this.value, 'id': ({{slider_id}}).id},
                 success: function(res) {
-                    console.log(res);
+                    Plotly.newPlot({{slider_id}}.id, res);
+                    Plotly.redraw({{slider_id}}.id);
                 }
         });
     }
