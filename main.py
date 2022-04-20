@@ -7,6 +7,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import os
 import plotly.graph_objects as go
+import pyautogui
 
 from factory import StockAnalysis, convert_fig_to_json, get_scatter_graph, combine_graphs
 from keys.keys import Columns, AnalysisFunctions, PlotTypes
@@ -16,6 +17,7 @@ from data.tools import Buffer
 app = Flask(__name__, template_folder="templates/")
 scheduler = APScheduler()
 buffer = Buffer()
+buffer.clear_cache()
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -30,6 +32,7 @@ def test():
     if request.method == 'POST':
         if request.form['submit_ticker'] == 'Submit Ticker':
             if request.form['user_ticker'] != '':
+                min_ma, max_ma = 5, 100
                 ticker = request.form.get("user_ticker").upper()
                 data_dump = StockAnalysis(buffer)
 
@@ -47,7 +50,7 @@ def test():
                     return index_template + "<br> NO DATA FOR PROVIDED TICKER: " + ticker
 
                 analysis = AnalysisFunctions.MovingAverage()
-                for i in range(15, 100, 5):
+                for i in range(min_ma, max_ma, 5):
                     analysis.set_sample_size(i)
                     buffer.cache(section="short")
                     data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
@@ -69,7 +72,7 @@ def test():
                     return index_template + graph_1 + "<br> NO DATA FOR LONG TERM CONFIGURATION " + ticker
 
                 analysis = AnalysisFunctions.MovingAverage()
-                for i in range(15, 95, 5):
+                for i in range(min_ma, max_ma, 5):
                     analysis.set_sample_size(i)
                     buffer.cache(section="long")
                     data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
@@ -106,30 +109,50 @@ def background_process_test():
                 bpk = buffer.get_buy_peaks()
                 sts = buffer.get_sell_series()
                 spk = buffer.get_sell_peaks()
-
+                cp = buffer.get_close_price()
                 traces = [get_scatter_graph(**{'x': ts,
                                                'y': ma,
                                                'name': f"MA:{new_sample_size}"}),
-                          get_scatter_graph(**{'x': sts,
+                            get_scatter_graph(**{'x': ts,
+                                               'y': cp,
+                                               'name': "Close Price",
+                                               'opacity': 0.6,
+                                               'marker': dict(
+                                                color='#ff8000',)}),
+                            get_scatter_graph(**{'x': sts,
                                                'y': spk,
                                                'name': "SELL",
+                                               'mode': 'markers',
                                                'marker': dict(
                                                    size=8,
                                                    color='red',
                                                    symbol='arrow-bar-down'
-                                               ), }),
-                          get_scatter_graph(**{'x': bts,
+                                                   ), }),
+                            get_scatter_graph(**{'x': bts,
                                                'y': bpk,
                                                'name': "BUY",
+                                               'mode': 'markers',
                                                'marker': dict(
                                                    size=8,
                                                    color='green',
                                                    symbol='arrow-bar-up'
-                                               ), })
+                                                   ), })
                           ]
                 graph = combine_graphs(traces, PlotTypes.TRACE)
+                width, height = pyautogui.size()
+                rgb = 220
+                margins = 30
+                op = 0.8
+                graph.update_layout(
+                    width=int(width * 0.98),
+                    height=int(height * 0.6),
+                    margin=dict(l=margins, r=margins, t=margins, b=margins),
+                    paper_bgcolor=f"rgba({rgb},{rgb},{rgb},{op})",
+                    plot_bgcolor=f"rgba({rgb},{rgb},{rgb}, {op})"
+                )
                 graph = json.dumps(graph, cls=plotly.utils.PlotlyJSONEncoder)
-                return graph
+                gid = "Long" if this_id.lower() == "long" else "Short"
+                return {'gp': graph, 'gid': gid}
         else:
             print("no data")
 
@@ -151,4 +174,5 @@ def output_html():
 if __name__ == "__main__":
     # scheduler.add_job(id='Scheduled Task', func=output_html, trigger="interval", seconds=5)
     # scheduler.start()
-    app.run(host="localhost", port=5000, debug=True)
+    # app.run(host="localhost", port=5000, debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=True)

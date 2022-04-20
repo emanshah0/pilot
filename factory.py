@@ -1,3 +1,4 @@
+from fileinput import close
 import yfinance as yf
 import json
 import pandas as pd
@@ -84,6 +85,7 @@ class StockAnalysis:
                            'marker': dict(
                                color='#ff8000', )}))
             if analysis.close_price:
+                self.buffer.cache(close_price=self.data[ticker][Columns.adj_close.value].tolist())
                 traces.append(
                     get_scatter_graph(
                         **{'x': time,

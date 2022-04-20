@@ -1,5 +1,6 @@
 import os
 import json
+from numpy import save
 import pandas as pd
 from collections import defaultdict
 import shutil
@@ -18,19 +19,20 @@ class Buffer:
         self.buy_time_series: list = []
         self.sell_peaks: list = []
         self.sell_time_series: list = []
+        self.close_price: list = []
         self.section: str = ""
         self.sample_size: str = ""
 
     def cache(self, ts=None, buy_ts=None, sell_ts=None, section=None, ma=None, buy_pk=None, sell_pk=None,
-              sample_size=None):
+              sample_size=None, close_price=None):
         if ts:
             self.time_series = ts
         if buy_ts:
             self.buy_time_series = buy_ts
         if buy_pk:
-            self.buy_peaks = buy_ts
+            self.buy_peaks = buy_pk
         if sell_pk:
-            self.sell_peaks = sell_ts
+            self.sell_peaks = sell_pk
         if sell_ts:
             self.sell_time_series = sell_ts
         if section:
@@ -39,6 +41,8 @@ class Buffer:
             self.sample_size = sample_size
         if ma:
             self.ma = ma
+        if close_price:
+            self.close_price = close_price
 
     def save(self):
         ma_route = f"cache/{self.section}/{self.sample_size}/ma.csv"
@@ -47,6 +51,7 @@ class Buffer:
         bpk_route = f"cache/{self.section}/{self.sample_size}/bpk.csv"
         sts_route = f"cache/{self.section}/{self.sample_size}/sts.csv"
         spk_route = f"cache/{self.section}/{self.sample_size}/spk.csv"
+        close_route = f"cache/{self.section}/{self.sample_size}/close.csv"
         try:
             os.makedirs(f"cache/long")
         except:
@@ -71,10 +76,14 @@ class Buffer:
             os.remove(sts_route)
         if os.path.isfile(spk_route):
             os.remove(spk_route)
+        if os.path.isfile(close_route):
+            os.remove(close_route)
         if self.ma:
             save_dataframe({'ma': self.ma}, ma_route)
         if self.time_series:
             save_dataframe({'ts': self.time_series}, ts_route)
+        if self.close_price:
+            save_dataframe({'cp': self.close_price}, close_route)
         if self.buy_time_series and self.buy_peaks:
             save_dataframe({'bts': self.buy_time_series}, bts_route)
             save_dataframe({'bpk': self.buy_peaks}, bpk_route)
@@ -83,8 +92,7 @@ class Buffer:
             save_dataframe({'spk': self.sell_peaks}, spk_route)
 
     def load(self, section: str, sample_size: str):
-        self.time_series, self.ma, self.buy_time_series, self.buy_peaks, self.sell_time_series, self.sell_peaks = \
-            load_dataframe(section, sample_size)
+        self.time_series, self.ma, self.buy_time_series, self.buy_peaks, self.sell_time_series, self.sell_peaks , self.close_price = load_dataframe(section, sample_size)
 
     def clear_buffer(self):
         self.ma = []
@@ -134,6 +142,9 @@ class Buffer:
     def get_sample_size(self):
         return self.sample_size
 
+    def get_close_price(self):
+        return self.close_price
+
 
 def save_dataframe(data: dict, fp: str):
     try:
@@ -149,17 +160,20 @@ def load_dataframe(section, sample_size):
     bpk_route = f"cache/{section}/{str(sample_size)}/bpk.csv"
     sts_route = f"cache/{section}/{str(sample_size)}/sts.csv"
     spk_route = f"cache/{section}/{str(sample_size)}/spk.csv"
+    close_route = f"cache/{section}/{str(sample_size)}/close.csv"
 
-    ma, ts, bts, bpk, sts, spk = [], [], [], [], [], []
+    ma, ts, bts, bpk, sts, spk, cp = [], [], [], [], [], [], []
     if os.path.isfile(ma_route):
-        ma = pd.read_csv(ma_route)
+        ma = pd.read_csv(ma_route)['ma'].tolist()
     if os.path.isfile(ts_route):
-        ts = pd.read_csv(ts_route)
+        ts = pd.read_csv(ts_route)['ts'].tolist()
+    if os.path.isfile(close_route):
+        cp = pd.read_csv(close_route)['cp'].tolist()
     if os.path.isfile(bts_route) and os.path.isfile(bpk_route):
-        bts = pd.read_csv(bts_route)
-        bpk = pd.read_csv(bpk_route)
+        bts = pd.read_csv(bts_route)['bts'].tolist()
+        bpk = pd.read_csv(bpk_route)['bpk'].tolist()
     if os.path.isfile(sts_route) and os.path.isfile(spk_route):
-        sts = pd.read_csv(sts_route)
-        spk = pd.read_csv(spk_route)
+        sts = pd.read_csv(sts_route)['sts'].tolist()
+        spk = pd.read_csv(spk_route)['spk'].tolist()
 
-    return ts, ma, bts, bpk, sts, spk
+    return ts, ma, bts, bpk, sts, spk, cp

@@ -25,16 +25,14 @@
 <script type='text/javascript'>
     var sliderDiv = document.getElementById("sliderAmount");
 
-    ({{slider_id}}).onchange = function() {
+    ({{slider_id}}).oninput = function() {
         sliderDiv.innerHTML = this.value;
-        console.log(({{slider_id}}).id)
         $.ajax({
                 url: '/background_process_test',
                 type: "POST",
                 data: {'ss': this.value, 'id': ({{slider_id}}).id},
                 success: function(res) {
-                    Plotly.newPlot({{slider_id}}.id, res);
-                    Plotly.redraw({{slider_id}}.id);
+                    Plotly.newPlot(res['gid'], JSON.parse(res['gp']), {});
                 }
         });
     }
