@@ -26,13 +26,13 @@ def index():
     return index_template
 
 
-@app.route("/test", methods=["GET", "POST"])
-def test():
+@app.route("/MA", methods=["GET", "POST"])
+def ma():
     index_template = render_template(template_name_or_list="index.html")
     if request.method == 'POST':
         if request.form['submit_ticker'] == 'Submit Ticker':
             if request.form['user_ticker'] != '':
-                min_ma, max_ma = 5, 100
+                min_ma, max_ma = 20, 100
                 ticker = request.form.get("user_ticker").upper()
                 data_dump = StockAnalysis(buffer)
 
@@ -50,7 +50,7 @@ def test():
                     return index_template + "<br> NO DATA FOR PROVIDED TICKER: " + ticker
 
                 analysis = AnalysisFunctions.MovingAverage()
-                for i in range(min_ma, max_ma, 5):
+                for i in range(min_ma, max_ma, 10):
                     analysis.set_sample_size(i)
                     buffer.cache(section="short")
                     data_dump.get_graph(analysis=analysis, plot_type=PlotTypes.TRACE, ticker=ticker)
@@ -113,13 +113,13 @@ def background_process_test():
                 traces = [get_scatter_graph(**{'x': ts,
                                                'y': ma,
                                                'name': f"MA:{new_sample_size}"}),
-                            get_scatter_graph(**{'x': ts,
+                          get_scatter_graph(**{'x': ts,
                                                'y': cp,
                                                'name': "Close Price",
                                                'opacity': 0.6,
                                                'marker': dict(
-                                                color='#ff8000',)}),
-                            get_scatter_graph(**{'x': sts,
+                                                   color='#ff8000', )}),
+                          get_scatter_graph(**{'x': sts,
                                                'y': spk,
                                                'name': "SELL",
                                                'mode': 'markers',
@@ -127,8 +127,8 @@ def background_process_test():
                                                    size=8,
                                                    color='red',
                                                    symbol='arrow-bar-down'
-                                                   ), }),
-                            get_scatter_graph(**{'x': bts,
+                                               ), }),
+                          get_scatter_graph(**{'x': bts,
                                                'y': bpk,
                                                'name': "BUY",
                                                'mode': 'markers',
@@ -136,7 +136,7 @@ def background_process_test():
                                                    size=8,
                                                    color='green',
                                                    symbol='arrow-bar-up'
-                                                   ), })
+                                               ), })
                           ]
                 graph = combine_graphs(traces, PlotTypes.TRACE)
                 width, height = pyautogui.size()
